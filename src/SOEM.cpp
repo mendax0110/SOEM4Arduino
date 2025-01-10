@@ -354,15 +354,15 @@ void hal_ethernet_recv_rel(void)
 
 #else
 /**************************************************
-  for Ethernet Shield (W5500)
+  for Ethernet Shield (W5100)
 **************************************************/
 
 #include <SPI.h>
-#include "w5500/w5500.h"
+#include "w5100/w5100.h"
 
-// W5500 RAW socket
+// W5100 RAW socket
 static SOCKET sock;
-// W5500 RAW socket buffer
+// W5100 RAW socket buffer
 static unsigned char socketBuffer[1536];
 
 #ifdef __cplusplus
@@ -375,12 +375,12 @@ extern "C"
 int hal_ethernet_open(void)
 {
 #if defined(ARDUINO_M5Stack_Core_ESP32)
-    w5500.init(26); // M5Stack's SS is GPIO26.
+    w5100.init(26); // M5Stack's SS is GPIO26.
 #elif defined(ESP32)
     if(strcmp(ARDUINO_BOARD, "ESP32_PICO") == 0){
-        w5500.init(25, 19, 21, 22); // for M5 ATOM Matrix
+        w5100.init(25, 19, 21, 22); // for M5 ATOM Matrix
     }else{
-        w5500.init(5);// ESP32's SS is typically GPIO5.
+        w5100.init(5);// ESP32's SS is typically GPIO5.
     }
 #else
     // Ethernet Shield 2
@@ -388,26 +388,26 @@ int hal_ethernet_open(void)
     pinMode(4, OUTPUT);
     digitalWrite(4, HIGH);
     
-    w5500.init();
+    w5100.init();
 #endif
-    w5500.writeSnMR(sock, SnMR::MACRAW); 
-    w5500.execCmdSn(sock, Sock_OPEN);
+    w5100.writeSnMR(sock, SnMR::MACRAW); 
+    w5100.execCmdSn(sock, Sock_OPEN);
     return 0;
 }
 
 // (2) close
 void hal_ethernet_close(void)
 {
-    // w5500 doesn't have close() or terminate() method
-    w5500.swReset();
+    // w5100 doesn't have close() or terminate() method
+    w5100.swReset();
 }
 
 // (3) send
 // return: 0=SUCCESS (!!! not sent size)
 int hal_ethernet_send(unsigned char *data, int len)
 {
-    w5500.send_data_processing(sock, (byte *)data, len);
-    w5500.execCmdSn(sock, Sock_SEND_MAC);
+    w5100.send_data_processing(sock, (byte *)data, len);
+    w5100.execCmdSn(sock, Sock_SEND_MAC);
     return 0;
 }
 
@@ -416,11 +416,11 @@ int hal_ethernet_send(unsigned char *data, int len)
 int hal_ethernet_recv(unsigned char **data)
 {
     unsigned short packetSize;
-    int res = w5500.getRXReceivedSize(sock);
+    int res = w5100.getRXReceivedSize(sock);
     if(res > 0){
         // first 2byte shows packet size
-        w5500.recv_data_processing(sock, (byte*)socketBuffer, 2);
-        w5500.execCmdSn(sock, Sock_RECV);
+        w5100.recv_data_processing(sock, (byte*)socketBuffer, 2);
+        w5100.execCmdSn(sock, Sock_RECV);
         // packet size
         packetSize  = socketBuffer[0];
         packetSize  <<= 8;
@@ -429,8 +429,8 @@ int hal_ethernet_recv(unsigned char **data)
         packetSize  -= 2;
         // get received data
         memset(socketBuffer, 0x00, 1536);
-        w5500.recv_data_processing(sock, (byte *)socketBuffer, packetSize);
-        w5500.execCmdSn(sock, Sock_RECV);
+        w5100.recv_data_processing(sock, (byte *)socketBuffer, packetSize);
+        w5100.execCmdSn(sock, Sock_RECV);
         *data = socketBuffer;
     }
     return packetSize;
@@ -440,5 +440,5 @@ int hal_ethernet_recv(unsigned char **data)
 }
 #endif
 
-#endif // for Ethernet Shield (W5500)
+#endif // for Ethernet Shield (W5100)
 
